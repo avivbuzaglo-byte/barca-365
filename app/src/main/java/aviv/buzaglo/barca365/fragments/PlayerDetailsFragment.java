@@ -1,0 +1,297 @@
+package aviv.buzaglo.barca365.fragments;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.bumptech.glide.Glide;
+
+import java.util.Calendar;
+import java.util.Locale;
+
+import aviv.buzaglo.barca365.R;
+import aviv.buzaglo.barca365.models.PlayerProfile;
+import aviv.buzaglo.barca365.models.PlayerStatsResponse;
+import aviv.buzaglo.barca365.network.SofaApiService;
+import aviv.buzaglo.barca365.network.SofaRetrofitClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class PlayerDetailsFragment extends Fragment {
+
+    private int playerId;
+    private int shirtNumber;
+    private ProgressBar progressBar;
+    private ScrollView contentScrollView;
+
+    // UI Elements
+    private TextView tvName, tvNumber, tvPosition, tvAge, tvHeight, tvNation;
+    private TextView tvApps, tvGoals, tvAssists;
+    private TextView tvLabelGoals, tvLabelAssists; // הכותרות המשתנות
+
+    // האייקונים המשתנים
+    private ImageView iconGoals, iconAssists;
+
+    private ImageView imgPlayer, btnBack;
+
+    // משתנה לזיהוי שוער
+    private boolean isGoalkeeper = false;
+
+    private static final int TOURNAMENT_ID_LALIGA = 8;
+    private static final int SEASON_ID_25_26 = 77559;
+
+    public static PlayerDetailsFragment newInstance(int playerId, int shirtNumber) {
+        PlayerDetailsFragment fragment = new PlayerDetailsFragment();
+        Bundle args = new Bundle();
+        args.putInt("PLAYER_ID", playerId);
+        args.putInt("PLAYER_NUMBER", shirtNumber);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_player_details, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        if (getArguments() != null) {
+            playerId = getArguments().getInt("PLAYER_ID");
+            shirtNumber = getArguments().getInt("PLAYER_NUMBER");
+        }
+
+        initViews(view);
+        tvNumber.setText(String.valueOf(shirtNumber));
+
+        // קודם מביאים פרטים (כדי לדעת אם הוא שוער), ורק אז סטטיסטיקה
+        fetchPlayerDetails();
+
+        btnBack.setOnClickListener(v -> {
+            if (getParentFragmentManager().getBackStackEntryCount() > 0) {
+                getParentFragmentManager().popBackStack();
+            }
+        });
+    }
+
+    private void initViews(View view) {
+        progressBar = view.findViewById(R.id.player_detail_progress_bar);
+        contentScrollView = view.findViewById(R.id.player_detail_content_scrollview);
+
+        tvName = view.findViewById(R.id.player_detail_name);
+        tvNumber = view.findViewById(R.id.player_detail_number);
+        tvPosition = view.findViewById(R.id.player_detail_position);
+        tvAge = view.findViewById(R.id.stat_age);
+        tvHeight = view.findViewById(R.id.stat_height);
+        tvNation = view.findViewById(R.id.stat_nationality);
+
+        imgPlayer = view.findViewById(R.id.player_detail_image);
+        btnBack = view.findViewById(R.id.back_arrow_icon);
+
+        tvApps = view.findViewById(R.id.stat_appearances);
+        tvGoals = view.findViewById(R.id.stat_goals);
+        tvAssists = view.findViewById(R.id.stat_assists);
+
+        tvLabelGoals = view.findViewById(R.id.stat_label_2);
+        tvLabelAssists = view.findViewById(R.id.stat_label_3);
+
+        // אתחול האייקונים
+        iconGoals = view.findViewById(R.id.icon_stat_goals);
+        iconAssists = view.findViewById(R.id.icon_stat_assists);
+    }
+
+    private void fetchPlayerDetails() {
+        progressBar.setVisibility(View.VISIBLE);
+
+        SofaApiService apiService = SofaRetrofitClient.getClient().create(SofaApiService.class);
+        Call<PlayerProfile> call = apiService.getPlayerDetails(playerId);
+
+        call.enqueue(new Callback<PlayerProfile>() {
+            @Override
+            public void onResponse(Call<PlayerProfile> call, Response<PlayerProfile> response) {
+                progressBar.setVisibility(View.GONE);
+                if (response.isSuccessful() && response.body() != null) {
+                    contentScrollView.setVisibility(View.VISIBLE);
+                    updateUI(response.body().getPlayer());
+
+                    // רק עכשיו, כשאנחנו יודעים אם הוא שוער, נביא סטטיסטיקה
+                    fetchPlayerStats();
+                } else {
+                    Toast.makeText(getContext(), "Error loading details", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PlayerProfile> call, Throwable t) {
+                progressBar.setVisibility(View.GONE);
+                Toast.makeText(getContext(), "Network Error", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateUI(PlayerProfile.PlayerData data) {
+        tvName.setText(data.getName());
+
+        int age = calculateAge(data.getDateOfBirthTimestamp());
+        tvAge.setText(String.valueOf(age));
+
+        tvHeight.setText(data.getHeight() + " cm");
+
+        // תיקון: שימוש ב-getNationality
+        if (data.getCountry() != null) {
+            tvNation.setText(data.getCountry().getName());
+        } else {
+            tvNation.setText("-");
+        }
+
+        // --- לוגיקה מסודרת לעמדה ---
+        String displayPosition;
+        if (data.getPositionsDetailed() != null && !data.getPositionsDetailed().isEmpty()) {
+            // יש פירוט: משתמשים בו
+            String firstPosition = data.getPositionsDetailed().get(0);
+            displayPosition = getFullDetailedPosition(firstPosition);
+
+            // בדיקה אם שוער לפי הפירוט
+            if (firstPosition.equalsIgnoreCase("GK")) {
+                isGoalkeeper = true;
+            }
+        } else {
+            // אין פירוט: משתמשים בברירת מחדל (חייבים את convertPosition!)
+            displayPosition = convertPosition(data.getPosition());
+
+            // בדיקה אם שוער לפי הכללי
+            if (data.getPosition() != null && data.getPosition().equalsIgnoreCase("G")) {
+                isGoalkeeper = true;
+            }
+        }
+        tvPosition.setText(displayPosition);
+
+        String imageUrl = "https://api.sofascore.app/api/v1/player/" + playerId + "/image";
+        Glide.with(this)
+                .load(imageUrl)
+                .placeholder(R.drawable.ic_launcher_background)
+                .into(imgPlayer);
+    }
+
+    private void fetchPlayerStats() {
+        SofaApiService apiService = SofaRetrofitClient.getClient().create(SofaApiService.class);
+
+        Call<PlayerStatsResponse> call = apiService.getPlayerSeasonStats(
+                playerId,
+                TOURNAMENT_ID_LALIGA,
+                SEASON_ID_25_26
+        );
+
+        call.enqueue(new Callback<PlayerStatsResponse>() {
+            @Override
+            public void onResponse(Call<PlayerStatsResponse> call, Response<PlayerStatsResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getStatistics() != null) {
+                    PlayerStatsResponse.StatsData stats = response.body().getStatistics();
+
+                    // מספר הופעות (משותף לכולם)
+                    tvApps.setText(String.valueOf(stats.getAppearances()));
+
+                    // --- לוגיקה להצגת שוער vs שחקן ---
+                    if (isGoalkeeper) {
+                        // החלפת טקסטים לשוער
+                        tvLabelGoals.setText("Saves");
+                        tvLabelAssists.setText("Clean Sheets");
+
+                        tvGoals.setText(String.valueOf(stats.getSaves()));
+                        tvAssists.setText(String.valueOf(stats.getCleanSheets()));
+
+                        // החלפת אייקונים לשוער
+                        iconGoals.setImageResource(R.drawable.ic_glove); // אייקון כפפות
+                        iconAssists.setImageResource(R.drawable.ic_shield); // אייקון מגן
+                    } else {
+                        // טקסטים רגילים לשחקן
+                        tvLabelGoals.setText("Goals");
+                        tvLabelAssists.setText("Assists");
+
+                        tvGoals.setText(String.valueOf(stats.getGoals()));
+                        tvAssists.setText(String.valueOf(stats.getAssists()));
+
+                        // אייקונים רגילים לשחקן
+                        iconGoals.setImageResource(R.drawable.ic_ball); // אייקון כדור
+                        iconAssists.setImageResource(R.drawable.ic_boot); // אייקון נעל
+                    }
+                } else {
+                    setZeroStats();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PlayerStatsResponse> call, Throwable t) {
+                setZeroStats();
+            }
+        });
+    }
+
+    private void setZeroStats() {
+        if (tvApps != null) {
+            tvApps.setText("0");
+            tvGoals.setText("0");
+            tvAssists.setText("0");
+        }
+    }
+
+    private int calculateAge(long timestamp) {
+        Calendar dob = Calendar.getInstance();
+        dob.setTimeInMillis(timestamp * 1000);
+        Calendar today = Calendar.getInstance();
+        int age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR);
+        if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
+            age--;
+        }
+        return age;
+    }
+
+    // --- החזרתי את הפונקציה הזו כי ה-else למעלה משתמש בה ---
+    private String convertPosition(String shortPos){
+        if(shortPos == null) return "-";
+        switch (shortPos.toUpperCase(Locale.ROOT)){
+            case "G": return "Goalkeeper";
+            case "D": return "Defender";
+            case "M": return "Midfielder";
+            case "F": return "Forward";
+            default: return shortPos;
+        }
+    }
+
+    private String getFullDetailedPosition(String abbreviation) {
+        if (abbreviation == null) return "";
+        switch (abbreviation.toUpperCase()) {
+            case "GK": return "Goalkeeper";
+            case "DC": case "CB": return "Center Back"; // הוספתי וריאציות
+            case "DL": case "LB": return "Left Back";
+            case "DR": case "RB": return "Right Back";
+            case "LWB": return "Left Wing Back";
+            case "RWB": return "Right Wing Back";
+            case "DM": case "CDM": return "Defensive Midfielder";
+            case "MC": case "CM": return "Central Midfielder";
+            case "AM": case "CAM": return "Attacking Midfielder";
+            case "LM": return "Left Midfielder";
+            case "RM": return "Right Midfielder";
+            case "LW": return "Left Winger";
+            case "RW": return "Right Winger";
+            case "ST": return "Striker";
+            case "CF": return "Center Forward";
+            case "SS": return "Second Striker";
+            default: return abbreviation;
+        }
+    }
+}

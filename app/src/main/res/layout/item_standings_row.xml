@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingVertical="12dp"
+    android:paddingHorizontal="8dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/position_text"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="1" />
+
+    <ImageView
+        android:id="@+id/team_logo"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="8dp"
+        android:contentDescription="Logo"
+        tools:src="@drawable/ic_launcher_background" />
+
+    <TextView
+        android:id="@+id/team_name_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="12dp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="FC Barcelona" />
+
+    <TextView
+        android:id="@+id/mp_text"
+        android:layout_width="35dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#AAAAAA"
+        android:textSize="12sp"
+        tools:text="38" />
+
+    <TextView
+        android:id="@+id/wins_text"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#AAAAAA"
+        android:textSize="12sp"
+        tools:text="28" />
+
+    <TextView
+        android:id="@+id/draws_text"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#AAAAAA"
+        android:textSize="12sp"
+        tools:text="4" />
+
+    <TextView
+        android:id="@+id/losses_text"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#AAAAAA"
+        android:textSize="12sp"
+        tools:text="6" />
+
+    <TextView
+        android:id="@+id/gd_text"
+        android:layout_width="45dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#4ade80"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        tools:text="+63" />
+
+    <TextView
+        android:id="@+id/points_text"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="88" />
+
+</LinearLayout>

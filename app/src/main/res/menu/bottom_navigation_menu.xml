@@ -22,4 +22,11 @@
         android:title="Matches"
         android:icon="@drawable/ic_matches"
         />
+    <item
+        android:id="@+id/table"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Table"
+        android:icon="@drawable/ic_table"
+    />
 </menu>

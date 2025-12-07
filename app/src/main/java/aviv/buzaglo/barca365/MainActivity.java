@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import aviv.buzaglo.barca365.fragments.PlayersFragment; // ודא שהייבוא הזה קיים
+import aviv.buzaglo.barca365.fragments.StandingsFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
                 selectedFragment = new PlayersFragment();
             } else if (itemId == R.id.matches) {
                 // selectedFragment = new MatchesFragment(); // נפתח בהמשך
+            }
+            else if (itemId == R.id.table){
+                selectedFragment = new StandingsFragment();
             }
 
             // אם נבחר פרגמנט, טען אותו

@@ -4,8 +4,9 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import aviv.buzaglo.barca365.fragments.PlayersFragment; // ודא שהייבוא הזה קיים
+import aviv.buzaglo.barca365.fragments.PlayersFragment;
 import aviv.buzaglo.barca365.fragments.StandingsFragment;
+import aviv.buzaglo.barca365.fragments.FixturesFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
                 // כאן אנחנו יוצרים את פרגמנט השחקנים שבנינו
                 selectedFragment = new PlayersFragment();
             } else if (itemId == R.id.matches) {
-                // selectedFragment = new MatchesFragment(); // נפתח בהמשך
+                selectedFragment = new FixturesFragment();
             }
             else if (itemId == R.id.table){
                 selectedFragment = new StandingsFragment();

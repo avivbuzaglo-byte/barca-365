@@ -2,6 +2,7 @@ package aviv.buzaglo.barca365.network;
 
 import aviv.buzaglo.barca365.models.PlayerProfile;
 import aviv.buzaglo.barca365.models.PlayerStatsResponse;
+import aviv.buzaglo.barca365.models.SofaEventsResponse;
 import aviv.buzaglo.barca365.models.SquadResponse;
 import aviv.buzaglo.barca365.models.StandingsResponse;
 import retrofit2.Call;
@@ -26,5 +27,17 @@ public interface SofaApiService {
     Call<StandingsResponse> getStandings(
             @Path("tournamentId") int tournamentId,
             @Path("seasonId") int seasonId
+    );
+    @GET("team/{teamId}/events/last/{page}")
+    Call<SofaEventsResponse> getTeamLastEvents(
+            @Path("teamId") int teamId,
+            @Path("page") int page
+    );
+
+    // קריאה למשחקים שיהיו (לוח משחקים עתידי)
+    @GET("team/{teamId}/events/next/{page}")
+    Call<SofaEventsResponse> getTeamNextEvents(
+            @Path("teamId") int teamId,
+            @Path("page") int page
     );
 }

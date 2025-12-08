@@ -115,7 +115,7 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:layout_margin="4dp"
-                        android:background="@drawable/content_card_background"
+                        android:background="@drawable/info_card_background"
                         android:orientation="vertical"
                         android:padding="12dp"
                         android:gravity="center">

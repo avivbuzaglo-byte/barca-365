@@ -1,10 +1,12 @@
 package aviv.buzaglo.barca365.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,6 +31,7 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import aviv.buzaglo.barca365.R;
+import aviv.buzaglo.barca365.UserSettingsActivity;
 import aviv.buzaglo.barca365.adapters.InjuriesAdapter;
 import aviv.buzaglo.barca365.models.LastViewedPlayer;
 import aviv.buzaglo.barca365.models.PlayerProfile;
@@ -71,6 +74,7 @@ public class HomeFragment extends Fragment {
     private FirebaseFirestore db;
     private SimpleDateFormat timeFormat;
     private SimpleDateFormat dateFormat;
+    ImageButton btnProfile;
 
     @Nullable
     @Override
@@ -95,9 +99,14 @@ public class HomeFragment extends Fragment {
         loadNextMatchData();
         loadInjuriesFromSquad(); // הלוגיקה החדשה!
         loadLastViewedPlayer();
+        btnProfile.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), UserSettingsActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void initViews(View view) {
+        btnProfile = view.findViewById(R.id.imageButton);
         // Next Match
         nextMatchCard = view.findViewById(R.id.next_match_card);
         progressNextMatch = view.findViewById(R.id.progress_next_match);

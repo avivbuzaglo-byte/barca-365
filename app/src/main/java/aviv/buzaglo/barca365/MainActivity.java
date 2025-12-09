@@ -4,6 +4,8 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import aviv.buzaglo.barca365.fragments.HomeFragment;
 import aviv.buzaglo.barca365.fragments.PlayersFragment;
 import aviv.buzaglo.barca365.fragments.StandingsFragment;
 import aviv.buzaglo.barca365.fragments.FixturesFragment;
@@ -25,14 +27,13 @@ public class MainActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
 
             if (itemId == R.id.home) {
-                // selectedFragment = new HomeFragment(); // נפתח בהמשך
+                selectedFragment = new HomeFragment();
             } else if (itemId == R.id.players) {
-                // כאן אנחנו יוצרים את פרגמנט השחקנים שבנינו
                 selectedFragment = new PlayersFragment();
-            } else if (itemId == R.id.matches) {
+            } else if (itemId == R.id.fixtures) {
                 selectedFragment = new FixturesFragment();
             }
-            else if (itemId == R.id.table){
+            else if (itemId == R.id.standings){
                 selectedFragment = new StandingsFragment();
             }
 
@@ -44,13 +45,9 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // טעינת ברירת מחדל: כרגע נטען את Players כי הוא היחיד שמוכן
-        // כשתבנה את Home, תחליף את השורה הזו
-        loadFragment(new PlayersFragment());
-        bottomNavigationView.setSelectedItemId(R.id.players); // מסמן את הכפתור הנכון ויזואלית
+        loadFragment(new HomeFragment());
+        bottomNavigationView.setSelectedItemId(R.id.home);
     }
-
-    // פונקציית עזר להחלפת פרגמנטים
     private void loadFragment(Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()

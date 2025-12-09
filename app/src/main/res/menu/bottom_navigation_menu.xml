@@ -7,7 +7,20 @@
         android:title="Home"
         android:icon="@drawable/ic_home"
         />
-
+    <item
+        android:id="@+id/fixtures"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Fixtures"
+        android:icon="@drawable/ic_matches"
+        />
+    <item
+        android:id="@+id/standings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:title="Standings"
+        android:icon="@drawable/ic_table"
+    />
     <item
         android:id="@+id/players"
         android:layout_width="wrap_content"
@@ -15,18 +28,4 @@
         android:title="Players"
         android:icon="@drawable/ic_players"
         />
-    <item
-        android:id="@+id/matches"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:title="Matches"
-        android:icon="@drawable/ic_matches"
-        />
-    <item
-        android:id="@+id/table"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:title="Standings"
-        android:icon="@drawable/ic_table"
-    />
 </menu>

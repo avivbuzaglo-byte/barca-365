@@ -1,6 +1,7 @@
 package aviv.buzaglo.barca365.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,11 +16,17 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions; // הוספתי את זה לשמירה בטוחה
 
 import java.util.Calendar;
+import java.util.HashMap; // הוספתי
 import java.util.Locale;
+import java.util.Map; // הוספתי
 
 import aviv.buzaglo.barca365.R;
+import aviv.buzaglo.barca365.models.LastViewedPlayer;
 import aviv.buzaglo.barca365.models.PlayerProfile;
 import aviv.buzaglo.barca365.models.PlayerStatsResponse;
 import aviv.buzaglo.barca365.network.SofaApiService;
@@ -38,14 +45,11 @@ public class PlayerDetailsFragment extends Fragment {
     // UI Elements
     private TextView tvName, tvNumber, tvPosition, tvAge, tvHeight, tvNation;
     private TextView tvApps, tvGoals, tvAssists;
-    private TextView tvLabelGoals, tvLabelAssists; // הכותרות המשתנות
+    private TextView tvLabelGoals, tvLabelAssists;
 
-    // האייקונים המשתנים
     private ImageView iconGoals, iconAssists;
-
     private ImageView imgPlayer, btnBack;
 
-    // משתנה לזיהוי שוער
     private boolean isGoalkeeper = false;
 
     private static final int TOURNAMENT_ID_LALIGA = 8;
@@ -78,7 +82,6 @@ public class PlayerDetailsFragment extends Fragment {
         initViews(view);
         tvNumber.setText(String.valueOf(shirtNumber));
 
-        // קודם מביאים פרטים (כדי לדעת אם הוא שוער), ורק אז סטטיסטיקה
         fetchPlayerDetails();
 
         btnBack.setOnClickListener(v -> {
@@ -109,7 +112,6 @@ public class PlayerDetailsFragment extends Fragment {
         tvLabelGoals = view.findViewById(R.id.stat_label_2);
         tvLabelAssists = view.findViewById(R.id.stat_label_3);
 
-        // אתחול האייקונים
         iconGoals = view.findViewById(R.id.icon_stat_goals);
         iconAssists = view.findViewById(R.id.icon_stat_assists);
     }
@@ -128,7 +130,6 @@ public class PlayerDetailsFragment extends Fragment {
                     contentScrollView.setVisibility(View.VISIBLE);
                     updateUI(response.body().getPlayer());
 
-                    // רק עכשיו, כשאנחנו יודעים אם הוא שוער, נביא סטטיסטיקה
                     fetchPlayerStats();
                 } else {
                     Toast.makeText(getContext(), "Error loading details", Toast.LENGTH_SHORT).show();
@@ -151,40 +152,37 @@ public class PlayerDetailsFragment extends Fragment {
 
         tvHeight.setText(data.getHeight() + " cm");
 
-        // תיקון: שימוש ב-getNationality
         if (data.getCountry() != null) {
             tvNation.setText(data.getCountry().getName());
         } else {
             tvNation.setText("-");
         }
 
-        // --- לוגיקה מסודרת לעמדה ---
+        // --- חישוב העמדה ---
         String displayPosition;
         if (data.getPositionsDetailed() != null && !data.getPositionsDetailed().isEmpty()) {
-            // יש פירוט: משתמשים בו
             String firstPosition = data.getPositionsDetailed().get(0);
             displayPosition = getFullDetailedPosition(firstPosition);
-
-            // בדיקה אם שוער לפי הפירוט
             if (firstPosition.equalsIgnoreCase("GK")) {
                 isGoalkeeper = true;
             }
         } else {
-            // אין פירוט: משתמשים בברירת מחדל (חייבים את convertPosition!)
             displayPosition = convertPosition(data.getPosition());
-
-            // בדיקה אם שוער לפי הכללי
             if (data.getPosition() != null && data.getPosition().equalsIgnoreCase("G")) {
                 isGoalkeeper = true;
             }
         }
         tvPosition.setText(displayPosition);
 
+        // טעינת תמונה
         String imageUrl = "https://api.sofascore.app/api/v1/player/" + playerId + "/image";
         Glide.with(this)
                 .load(imageUrl)
                 .placeholder(R.drawable.ic_launcher_background)
                 .into(imgPlayer);
+
+        // --- !!! הוספה קריטית: כאן אנחנו קוראים לשמירה ב-FIREBASE !!! ---
+        saveLastViewedPlayerToFirebase(playerId, data.getName(), displayPosition, shirtNumber);
     }
 
     private void fetchPlayerStats() {
@@ -202,32 +200,22 @@ public class PlayerDetailsFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null && response.body().getStatistics() != null) {
                     PlayerStatsResponse.StatsData stats = response.body().getStatistics();
 
-                    // מספר הופעות (משותף לכולם)
                     tvApps.setText(String.valueOf(stats.getAppearances()));
 
-                    // --- לוגיקה להצגת שוער vs שחקן ---
                     if (isGoalkeeper) {
-                        // החלפת טקסטים לשוער
                         tvLabelGoals.setText("Saves");
                         tvLabelAssists.setText("Clean Sheets");
-
                         tvGoals.setText(String.valueOf(stats.getSaves()));
                         tvAssists.setText(String.valueOf(stats.getCleanSheets()));
-
-                        // החלפת אייקונים לשוער
-                        iconGoals.setImageResource(R.drawable.ic_glove); // אייקון כפפות
-                        iconAssists.setImageResource(R.drawable.ic_shield); // אייקון מגן
+                        iconGoals.setImageResource(R.drawable.ic_glove);
+                        iconAssists.setImageResource(R.drawable.ic_shield);
                     } else {
-                        // טקסטים רגילים לשחקן
                         tvLabelGoals.setText("Goals");
                         tvLabelAssists.setText("Assists");
-
                         tvGoals.setText(String.valueOf(stats.getGoals()));
                         tvAssists.setText(String.valueOf(stats.getAssists()));
-
-                        // אייקונים רגילים לשחקן
-                        iconGoals.setImageResource(R.drawable.ic_ball); // אייקון כדור
-                        iconAssists.setImageResource(R.drawable.ic_boot); // אייקון נעל
+                        iconGoals.setImageResource(R.drawable.ic_ball);
+                        iconAssists.setImageResource(R.drawable.ic_boot);
                     }
                 } else {
                     setZeroStats();
@@ -260,7 +248,6 @@ public class PlayerDetailsFragment extends Fragment {
         return age;
     }
 
-    // --- החזרתי את הפונקציה הזו כי ה-else למעלה משתמש בה ---
     private String convertPosition(String shortPos){
         if(shortPos == null) return "-";
         switch (shortPos.toUpperCase(Locale.ROOT)){
@@ -276,7 +263,7 @@ public class PlayerDetailsFragment extends Fragment {
         if (abbreviation == null) return "";
         switch (abbreviation.toUpperCase()) {
             case "GK": return "Goalkeeper";
-            case "DC": case "CB": return "Center Back"; // הוספתי וריאציות
+            case "DC": case "CB": return "Center Back";
             case "DL": case "LB": return "Left Back";
             case "DR": case "RB": return "Right Back";
             case "LWB": return "Left Wing Back";
@@ -293,5 +280,27 @@ public class PlayerDetailsFragment extends Fragment {
             case "SS": return "Second Striker";
             default: return abbreviation;
         }
+    }
+
+    // --- הפונקציה המתוקנת והבטוחה לשמירה ב-Firebase ---
+    private void saveLastViewedPlayerToFirebase(int id, String name, String position, int shirtNumber) {
+        FirebaseAuth mAuth = FirebaseAuth.getInstance();
+        if (mAuth.getCurrentUser() == null) return;
+
+        String uid = mAuth.getCurrentUser().getUid();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        String imageUrl = "https://api.sofascore.app/api/v1/player/" + id + "/image";
+
+        // יצירת מפה לעדכון (כדי לעדכן רק שדה אחד ולא לדרוס את כל היוזר)
+        LastViewedPlayer lastViewed = new LastViewedPlayer(id, name, position, shirtNumber, imageUrl);
+        Map<String, Object> updateData = new HashMap<>();
+        updateData.put("lastViewed", lastViewed);
+
+        // שימוש ב-set עם Merge הוא הבטוח ביותר: אם המסמך לא קיים הוא ייווצר, ואם כן - יעודכן
+        db.collection("Users").document(uid)
+                .set(updateData, SetOptions.merge())
+                .addOnSuccessListener(aVoid -> Log.d("Firebase", "Player saved successfully: " + name))
+                .addOnFailureListener(e -> Log.e("Firebase", "Error saving player", e));
     }
 }

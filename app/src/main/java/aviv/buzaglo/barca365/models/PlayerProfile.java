@@ -12,6 +12,8 @@ public class PlayerProfile {
     public PlayerData getPlayer() { return player; }
 
     public static class PlayerData {
+        @SerializedName("id")
+        private int id;
         @SerializedName("name")
         private String name;
 
@@ -28,9 +30,13 @@ public class PlayerProfile {
         private String position; // F, M, D...
         @SerializedName("positionsDetailed")
         private List<String> positionsDetailed;
+        @SerializedName("injury")
+        private Injury injury;
 
         public String getName() { return name; }
         public int getHeight() { return height; }
+        public int getId() {return id; }
+        public Injury getInjury() { return injury; }
         public long getDateOfBirthTimestamp() { return dateOfBirthTimestamp; }
         public NationalityData getCountry() { return country; }
         public String getPosition() { return position; }
@@ -42,5 +48,19 @@ public class PlayerProfile {
         private String name;
 
         public String getName() { return name; }
+    }
+    public static class Injury {
+        @SerializedName("reason")
+        private String reason; // "Knee Injury"
+
+        @SerializedName("status")
+        private String status; // "out" / "questionable"
+
+        @SerializedName("endDateTimestamp")
+        private Long endDateTimestamp; // תאריך חזרה משוער
+
+        public String getReason() { return reason; }
+        public String getStatus() { return status; }
+        public Long getEndDateTimestamp() { return endDateTimestamp; }
     }
 }

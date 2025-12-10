@@ -47,7 +47,6 @@ public class StandingsAdapter extends RecyclerView.Adapter<StandingsAdapter.View
         holder.tvDraws.setText(String.valueOf(row.getDraws()));
         holder.tvLosses.setText(String.valueOf(row.getLosses()));
         holder.tvPoints.setText(String.valueOf(row.getPoints()));
-
         // חישוב ועיצוב הפרש שערים
         int gd = row.getGoalDifference();
         String gdText = gd > 0 ? "+" + gd : String.valueOf(gd);
@@ -65,6 +64,13 @@ public class StandingsAdapter extends RecyclerView.Adapter<StandingsAdapter.View
         String imageUrl = "https://api.sofascore.app/api/v1/team/" + row.getTeam().getId() + "/image";
         Glide.with(context).load(imageUrl).into(holder.imgLogo);
 
+        int teamPosition = row.getPosition();
+        if (teamPosition >= 18 && teamPosition <= 20) {
+            holder.relegationIndicator.setVisibility(View.VISIBLE);
+        } else {
+            holder.relegationIndicator.setVisibility(View.GONE);
+        }
+
         // --- הדגשת ברצלונה ---
         // אם השם מכיל "Barcelona", נשנה את הרקע לטיפה יותר בהיר/כחלחל
         if (row.getTeam().getName().contains("Barcelona")) {
@@ -72,6 +78,7 @@ public class StandingsAdapter extends RecyclerView.Adapter<StandingsAdapter.View
         } else {
             holder.itemView.setBackgroundColor(Color.TRANSPARENT);
         }
+
     }
 
     @Override
@@ -82,6 +89,7 @@ public class StandingsAdapter extends RecyclerView.Adapter<StandingsAdapter.View
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvPosition, tvTeamName, tvMatches, tvWins, tvDraws, tvLosses, tvGD, tvPoints;
         ImageView imgLogo;
+        View relegationIndicator;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -94,6 +102,7 @@ public class StandingsAdapter extends RecyclerView.Adapter<StandingsAdapter.View
             tvLosses = itemView.findViewById(R.id.losses_text);
             tvGD = itemView.findViewById(R.id.gd_text);
             tvPoints = itemView.findViewById(R.id.points_text);
+            relegationIndicator = itemView.findViewById(R.id.relegation_indicator);
         }
     }
 }

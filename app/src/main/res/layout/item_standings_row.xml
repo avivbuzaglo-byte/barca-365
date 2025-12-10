@@ -8,15 +8,29 @@
     android:paddingHorizontal="8dp"
     android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/position_text"
+    <!-- Position with Red Indicator -->
+    <FrameLayout
         android:layout_width="30dp"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        tools:text="1" />
+        android:layout_height="wrap_content">
+
+        <View
+            android:id="@+id/relegation_indicator"
+            android:layout_width="3dp"
+            android:layout_height="24dp"
+            android:layout_gravity="start|center_vertical"
+            android:background="@drawable/relegation_indicator"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/position_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="1" />
+    </FrameLayout>
 
     <ImageView
         android:id="@+id/team_logo"

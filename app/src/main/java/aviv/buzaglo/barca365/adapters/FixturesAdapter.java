@@ -2,16 +2,22 @@ package aviv.buzaglo.barca365.adapters;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.ImageButton; // הוספתי לייבוא
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -22,6 +28,7 @@ import java.util.TimeZone;
 
 import aviv.buzaglo.barca365.R;
 import aviv.buzaglo.barca365.models.SofaEventsResponse;
+import aviv.buzaglo.barca365.network.GeminiAiManager; // השם החדש והנכון
 
 public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.FixtureViewHolder> {
 
@@ -131,7 +138,16 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
             holder.tvStatus.setTextColor(Color.parseColor("#4CAF50")); // ירוק בולט למשחק חי
         }
 
-        // הסרנו את ה-setOnClickListener - הכרטיס לא לחיץ יותר
+        // --- ניהול כפתור ה-AI ---
+        // נציג אותו רק אם המשחק הסתיים (סטטוס "finished")
+        if (event.getStatus() != null && event.getStatus().getCode() == 100) {
+            holder.btnAiAnalysis.setVisibility(View.VISIBLE);
+        }
+
+        // לחיצה על כפתור ה-AI
+        holder.btnAiAnalysis.setOnClickListener(v -> {
+            showGeminiDialog(v.getContext(), event);
+        });
     }
 
     // --- פונקציות עזר ---
@@ -166,6 +182,55 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
                 .into(imageView);
     }
 
+    // --- פונקציה להצגת דיאלוג ה-AI ---
+    private void showGeminiDialog(Context context, SofaEventsResponse.SofaEvent event) {
+        // יצירת ה-Bottom Sheet
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(context);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_gemini_analysis, null);
+        bottomSheetDialog.setContentView(view);
+
+        TextView tvResult = view.findViewById(R.id.tv_gemini_result);
+        ProgressBar progressBar = view.findViewById(R.id.gemini_progress_bar);
+
+        bottomSheetDialog.show();
+
+        // 3. בניית הפרומפט (השאלה לג'מיני)
+        String homeTeam = (event.getHomeTeam() != null) ? event.getHomeTeam().getName() : "Home Team";
+        String awayTeam = (event.getAwayTeam() != null) ? event.getAwayTeam().getName() : "Away Team";
+        String score = "0-0";
+        if (event.getHomeScore() != null && event.getAwayScore() != null) {
+            score = event.getHomeScore().getCurrent() + "-" + event.getAwayScore().getCurrent();
+        }
+
+        String prompt = "Act as a football analyst. Analyze the match between " + homeTeam + " and " + awayTeam +
+                ". The final score was " + score + ". " +
+                "Write a short, exciting 3-sentence summary of the match in Hebrew. " +
+                "Focus on the result and the teams.";
+
+        // 4. שליחה לג'מיני (שימוש במחלקה GeminiAiManager)
+        GeminiAiManager.analyzeMatch(prompt, new GeminiAiManager.GeminiCallback() {
+            @Override
+            public void onSuccess(String analysis) {
+                // חזרה ל-Thread הראשי כדי לעדכן UI
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    tvResult.setVisibility(View.VISIBLE);
+                    tvResult.setText(analysis);
+                });
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    tvResult.setVisibility(View.VISIBLE);
+                    tvResult.setText("שגיאה בניתוח המשחק. נסה שוב מאוחר יותר.");
+                    Log.e("Gemini", "Error", t);
+                });
+            }
+        });
+    }
+
     @Override
     public int getItemCount() {
         return events.size();
@@ -178,6 +243,9 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
         TextView tvTournamentName, tvDate;
         TextView tvHomeName, tvAwayName;
         TextView tvScore, tvTime, tvStatus;
+
+        // --- הוספנו את המשתנה הזה שהיה חסר ---
+        View btnAiAnalysis;
 
         public FixtureViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -196,6 +264,9 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
             tvScore = itemView.findViewById(R.id.text_score);
             tvTime = itemView.findViewById(R.id.text_time);
             tvStatus = itemView.findViewById(R.id.text_match_status);
+
+            // --- אתחול הכפתור ---
+            btnAiAnalysis = itemView.findViewById(R.id.btn_ai_analysis);
         }
     }
 }

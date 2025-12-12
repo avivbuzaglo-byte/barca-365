@@ -152,4 +152,8 @@ public class SofaEventsResponse {
         private int current;
         public int getCurrent() { return current; }
     }
+    public class IncidentsResponse {
+        private List<SofaIncident> incidents;
+        public List<SofaIncident> getIncidents() { return incidents; }
+    }
 }

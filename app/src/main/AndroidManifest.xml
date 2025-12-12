@@ -15,6 +15,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Barca365">
         <activity
+            android:name=".GeminiSummaryActivity"
+            android:exported="false" />
+        <activity
             android:name=".UserSettingsActivity"
             android:exported="false" />
         <activity

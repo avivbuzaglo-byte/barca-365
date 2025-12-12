@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layoutDirection="ltr"
     android:background="#1A1A1A">
 
     <RelativeLayout
@@ -30,9 +31,9 @@
             android:id="@+id/imageButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             app:srcCompat="@drawable/ic_account"
             app:tint="@android:color/white" />

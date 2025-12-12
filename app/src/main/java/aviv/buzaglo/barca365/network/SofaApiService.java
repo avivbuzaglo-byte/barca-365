@@ -49,4 +49,6 @@ public interface SofaApiService {
     Call<SofaSquadResponse> getSquadForInjuries(
             @Path("teamId") int teamId
     );
+    @GET("event/{id}/incidents")
+    Call<SofaEventsResponse.IncidentsResponse> getEventIncidents(@Path("id") int eventId);
 }

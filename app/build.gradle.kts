@@ -48,6 +48,8 @@ android {
 }
 
 dependencies {
+    implementation("io.noties.markwon:core:4.6.2")
+
     // Gemini AI
     implementation(libs.generativeai)
     implementation("com.google.guava:guava:33.0.0-jre")

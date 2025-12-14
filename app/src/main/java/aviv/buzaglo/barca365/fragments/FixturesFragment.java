@@ -35,8 +35,6 @@ public class FixturesFragment extends Fragment {
 
     // קבועים
     private static final int BARCA_TEAM_ID = 2817;
-    private static final int LALIGA_ID = 8;
-    private static final int UCL_ID = 7;
     private final int TOTAL_API_CALLS = 2;
 
     // UI Elements
@@ -152,13 +150,9 @@ public class FixturesFragment extends Fragment {
 
         List<SofaEventsResponse.SofaEvent> filteredList = new ArrayList<>();
 
-        // סינון: רק לה ליגה וצ'מפיונס (לפי ה-ID שהגדרנו למעלה)
         for (SofaEventsResponse.SofaEvent event : masterEventList) {
             if (event.getTournament() != null && event.getTournament().getUniqueTournament() != null) {
-                int id = event.getTournament().getUniqueTournament().getId();
-                if (id == LALIGA_ID || id == UCL_ID) {
                     filteredList.add(event);
-                }
             }
         }
 

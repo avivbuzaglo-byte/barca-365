@@ -163,7 +163,8 @@ public class HomeFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null && !response.body().getEvents().isEmpty()) {
                     SofaEventsResponse.SofaEvent nextMatch = response.body().getEvents().get(0);
                     updateNextMatchUI(nextMatch);
-                } else {
+                }
+                else {
                     progressNextMatch.setVisibility(View.GONE);
                 }
             }

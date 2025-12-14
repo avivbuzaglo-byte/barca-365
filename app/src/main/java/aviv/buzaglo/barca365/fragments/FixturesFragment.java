@@ -25,6 +25,7 @@ import aviv.buzaglo.barca365.adapters.FixturesAdapter;
 import aviv.buzaglo.barca365.models.SofaEventsResponse; // שים לב לשימוש במודל החדש
 import aviv.buzaglo.barca365.network.SofaApiService;
 import aviv.buzaglo.barca365.network.SofaRetrofitClient;
+import aviv.buzaglo.barca365.utils.Constants;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -34,7 +35,6 @@ public class FixturesFragment extends Fragment {
     private static final String TAG = "FixturesFragment";
 
     // קבועים
-    private static final int BARCA_TEAM_ID = 2817;
     private final int TOTAL_API_CALLS = 2;
 
     // UI Elements
@@ -92,7 +92,7 @@ public class FixturesFragment extends Fragment {
         apiCallCounter.set(0);
 
         // 1. קריאת משחקי עבר (Last Events)
-        apiService.getTeamLastEvents(BARCA_TEAM_ID, 0).enqueue(new Callback<SofaEventsResponse>() {
+        apiService.getTeamLastEvents(Constants.BARCELONA_TEAM_ID, 0).enqueue(new Callback<SofaEventsResponse>() {
             @Override
             public void onResponse(Call<SofaEventsResponse> call, Response<SofaEventsResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getEvents() != null) {
@@ -111,7 +111,7 @@ public class FixturesFragment extends Fragment {
         });
 
         // 2. קריאת משחקי עתיד (Next Events)
-        apiService.getTeamNextEvents(BARCA_TEAM_ID, 0).enqueue(new Callback<SofaEventsResponse>() {
+        apiService.getTeamNextEvents(Constants.BARCELONA_TEAM_ID, 0).enqueue(new Callback<SofaEventsResponse>() {
             @Override
             public void onResponse(Call<SofaEventsResponse> call, Response<SofaEventsResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getEvents() != null) {

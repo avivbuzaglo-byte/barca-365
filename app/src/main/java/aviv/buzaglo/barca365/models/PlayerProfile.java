@@ -32,6 +32,10 @@ public class PlayerProfile {
         private List<String> positionsDetailed;
         @SerializedName("injury")
         private Injury injury;
+        @SerializedName("proposedMarketValue")
+        private long proposedMarketValue;
+        @SerializedName("proposedMarketValueRaw")
+        private MarketValueRaw proposedMarketValueRaw;
 
         public String getName() { return name; }
         public int getHeight() { return height; }
@@ -41,6 +45,8 @@ public class PlayerProfile {
         public NationalityData getCountry() { return country; }
         public String getPosition() { return position; }
         public List<String> getPositionsDetailed() { return positionsDetailed; }
+        public long getProposedMarketValue() { return proposedMarketValue; }
+        public MarketValueRaw getProposedMarketValueRaw() { return proposedMarketValueRaw; }
     }
 
     public static class NationalityData {
@@ -62,5 +68,15 @@ public class PlayerProfile {
         public String getReason() { return reason; }
         public String getStatus() { return status; }
         public Long getEndDateTimestamp() { return endDateTimestamp; }
+    }
+    public static class MarketValueRaw {
+        @SerializedName("value")
+        private long value;
+
+        @SerializedName("currency")
+        private String currency; // "EUR", "USD" etc.
+
+        public long getValue() { return value; }
+        public String getCurrency() { return currency; }
     }
 }

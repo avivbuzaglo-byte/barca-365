@@ -28,6 +28,8 @@
             android:letterSpacing="0.05" />
 
         <ImageButton
+            android:padding="6dp"
+            android:scaleType="fitCenter"
             android:id="@+id/imageButton"
             android:layout_width="48dp"
             android:layout_height="48dp"

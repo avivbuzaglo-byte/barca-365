@@ -22,6 +22,7 @@ import aviv.buzaglo.barca365.models.SquadPlayer;
 import aviv.buzaglo.barca365.models.SquadResponse;
 import aviv.buzaglo.barca365.network.SofaApiService;
 import aviv.buzaglo.barca365.network.SofaRetrofitClient;
+import aviv.buzaglo.barca365.utils.Constants;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -33,7 +34,6 @@ public class PlayersFragment extends Fragment {
     private PlayersAdapter adapter;
 
     // מזהה הקבוצה של ברצלונה ב-Sofascore
-    private static final int BARCELONA_TEAM_ID = 2817;
 
     @Nullable
     @Override
@@ -61,7 +61,7 @@ public class PlayersFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
 
         SofaApiService apiService = SofaRetrofitClient.getClient().create(SofaApiService.class);
-        Call<SquadResponse> call = apiService.getTeamSquad(BARCELONA_TEAM_ID);
+        Call<SquadResponse> call = apiService.getTeamSquad(Constants.BARCELONA_TEAM_ID);
 
         call.enqueue(new Callback<SquadResponse>() {
             @Override

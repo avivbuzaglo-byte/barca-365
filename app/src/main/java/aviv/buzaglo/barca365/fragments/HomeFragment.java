@@ -39,6 +39,7 @@ import aviv.buzaglo.barca365.models.SofaEventsResponse;
 import aviv.buzaglo.barca365.models.SofaSquadResponse;
 import aviv.buzaglo.barca365.network.SofaApiService;
 import aviv.buzaglo.barca365.network.SofaRetrofitClient;
+import aviv.buzaglo.barca365.utils.Constants;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -46,7 +47,6 @@ import retrofit2.Response;
 public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
-    private static final int BARCA_TEAM_ID = 2817;
 
     // --- משתני UI ---
 
@@ -155,7 +155,7 @@ public class HomeFragment extends Fragment {
         progressNextMatch.setVisibility(View.VISIBLE);
         nextMatchCard.setVisibility(View.INVISIBLE);
 
-        apiService.getTeamNextEvents(BARCA_TEAM_ID, 0).enqueue(new Callback<SofaEventsResponse>() {
+        apiService.getTeamNextEvents(Constants.BARCELONA_TEAM_ID, 0).enqueue(new Callback<SofaEventsResponse>() {
             @Override
             public void onResponse(Call<SofaEventsResponse> call, Response<SofaEventsResponse> response) {
                 if (!isAdded()) return;
@@ -222,7 +222,7 @@ public class HomeFragment extends Fragment {
         if (injuriesAdapter != null) injuriesAdapter.updateList(liveInjuredList);
 
         // שלב 1: משיכת כל הסגל
-        apiService.getSquadForInjuries(BARCA_TEAM_ID).enqueue(new Callback<SofaSquadResponse>() {
+        apiService.getSquadForInjuries(Constants.BARCELONA_TEAM_ID).enqueue(new Callback<SofaSquadResponse>() {
             @Override
             public void onResponse(Call<SofaSquadResponse> call, Response<SofaSquadResponse> response) {
                 if (!isAdded()) return;

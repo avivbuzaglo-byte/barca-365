@@ -43,7 +43,7 @@ public class PlayerDetailsFragment extends Fragment {
     private ScrollView contentScrollView;
 
     // UI Elements
-    private TextView tvName, tvNumber, tvPosition, tvAge, tvHeight, tvNation;
+    private TextView tvName, tvNumber, tvPosition, tvAge, tvHeight, tvNation, tvValue, tvRating;
     private TextView tvApps, tvGoals, tvAssists;
     private TextView tvLabelGoals, tvLabelAssists;
 
@@ -114,6 +114,9 @@ public class PlayerDetailsFragment extends Fragment {
 
         iconGoals = view.findViewById(R.id.icon_stat_goals);
         iconAssists = view.findViewById(R.id.icon_stat_assists);
+
+        tvValue = view.findViewById(R.id.market_value_amount);
+        tvRating = view.findViewById(R.id.stat_rating);
     }
 
     private void fetchPlayerDetails() {
@@ -173,6 +176,9 @@ public class PlayerDetailsFragment extends Fragment {
             }
         }
         tvPosition.setText(displayPosition);
+        long value = data.getProposedMarketValueRaw().getValue();
+        String currency = data.getProposedMarketValueRaw().getCurrency();
+        tvValue.setText(formatMarketValue(value, currency));
 
         // טעינת תמונה
         String imageUrl = "https://api.sofascore.app/api/v1/player/" + playerId + "/image";
@@ -201,6 +207,9 @@ public class PlayerDetailsFragment extends Fragment {
                     PlayerStatsResponse.StatsData stats = response.body().getStatistics();
 
                     tvApps.setText(String.valueOf(stats.getAppearances()));
+                    double rating = stats.getRating();
+                    String shortRating = String.format(Locale.US, "%.1f", rating);
+                    tvRating.setText(shortRating);
 
                     if (isGoalkeeper) {
                         tvLabelGoals.setText("Saves");
@@ -280,6 +289,42 @@ public class PlayerDetailsFragment extends Fragment {
             case "SS": return "Second Striker";
             default: return abbreviation;
         }
+    }
+    public static String formatMarketValue(long value, String currencyCode) {
+        // 1. המרת קוד מטבע לסימן
+        String symbol = currencyCode;
+        if ("EUR".equalsIgnoreCase(currencyCode)) {
+            symbol = "€";
+        } else if ("USD".equalsIgnoreCase(currencyCode)) {
+            symbol = "$";
+        } else if ("GBP".equalsIgnoreCase(currencyCode)) {
+            symbol = "£";
+        }
+
+        // 2. חישוב הערך (מיליונים או אלפים)
+        if (value >= 1_000_000) {
+            // חילוק ב-1.0 מיליון כדי לקבל תוצאה עשרונית (double)
+            double inMillions = value / 1_000_000.0;
+
+            // בדיקה אם המספר שלם (למשל 15.0) כדי להציג אותו בלי נקודה
+            if (inMillions == (long) inMillions) {
+                return String.format(Locale.US, "%s%dM", symbol, (long) inMillions);
+            } else {
+                // עיצוב עם ספרה אחת אחרי הנקודה (למשל 9.4M)
+                return String.format(Locale.US, "%s%.1fM", symbol, inMillions);
+            }
+        } else if (value >= 1_000) {
+            // מקרה גיבוי לשחקנים צעירים (K)
+            double inThousands = value / 1_000.0;
+            if (inThousands == (long) inThousands) {
+                return String.format(Locale.US, "%s%dK", symbol, (long) inThousands);
+            } else {
+                return String.format(Locale.US, "%s%.1fK", symbol, inThousands);
+            }
+        }
+
+        // ערך נמוך מאוד
+        return symbol + value;
     }
 
     // --- הפונקציה המתוקנת והבטוחה לשמירה ב-Firebase ---

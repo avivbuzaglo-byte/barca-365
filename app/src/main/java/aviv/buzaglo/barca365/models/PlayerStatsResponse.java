@@ -20,6 +20,8 @@ public class PlayerStatsResponse {
 
         @SerializedName("assists")
         private int assists;
+        @SerializedName("rating")
+        private double rating;
         @SerializedName("saves")
         private int saves;
 
@@ -32,5 +34,6 @@ public class PlayerStatsResponse {
         public int getAssists() { return assists; }
         public int getSaves() { return saves; }
         public int getCleanSheets() { return cleanSheets; }
+        public double getRating() { return rating; }
     }
 }

@@ -27,16 +27,24 @@ import aviv.buzaglo.barca365.models.SofaEventsResponse;
 
 public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.FixtureViewHolder> {
 
+    // --- הוספה 1: הגדרת הממשק (Interface) ---
+    public interface OnCalendarClickListener {
+        void onCalendarClick(SofaEventsResponse.SofaEvent event);
+    }
+
     private List<SofaEventsResponse.SofaEvent> events;
     private Context context;
+    private OnCalendarClickListener calendarListener; // --- הוספה 2: משתנה לליסנר ---
 
     // פורמטים לתצוגת זמן ותאריך
     private final SimpleDateFormat timeFormat;
     private final SimpleDateFormat dateFormat;
 
-    public FixturesAdapter(Context context, List<SofaEventsResponse.SofaEvent> events) {
+    // --- הוספה 3: עדכון הבנאי לקבלת הליסנר ---
+    public FixturesAdapter(Context context, List<SofaEventsResponse.SofaEvent> events, OnCalendarClickListener listener) {
         this.context = context;
         this.events = events;
+        this.calendarListener = listener; // שמירת הליסנר
 
         // הגדרת פורמטים
         timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
@@ -65,7 +73,8 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
         SofaEventsResponse.SofaEvent event = events.get(position);
         if (event == null) return;
 
-        // 1. פרטי הטורניר
+        // ... (חלקים ללא שינוי: טורניר, תאריך, קבוצות) ...
+
         if (event.getTournament() != null) {
             holder.tvTournamentName.setText(event.getTournament().getName());
             if (event.getTournament().getUniqueTournament() != null) {
@@ -75,10 +84,8 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
             }
         }
 
-        // 2. תאריך
         holder.tvDate.setText(getSmartDate(event.getStartTimestamp()));
 
-        // 3. קבוצות
         if (event.getHomeTeam() != null) {
             holder.tvHomeName.setText(event.getHomeTeam().getName());
             String url = "https://api.sofascore.app/api/v1/team/" + event.getHomeTeam().getId() + "/image";
@@ -91,20 +98,33 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
             loadImage(url, holder.imgAwayLogo);
         }
 
-        // 4. ניהול סטטוס (חי / עתידי / שהסתיים)
-        int statusCode = (event.getStatus() != null) ? event.getStatus().getCode() : 0;
-        String statusDescription = (event.getStatus() != null) ? event.getStatus().getDescription() : "";
-
+        // --- ניהול נראות התחלתי (חשוב כדי למנוע באגים בגלילה) ---
         holder.tvScore.setVisibility(View.GONE);
         holder.tvTime.setVisibility(View.GONE);
         holder.tvStatus.setVisibility(View.GONE);
+        holder.btnCalender.setVisibility(View.GONE); // ברירת מחדל: מוסתר
+        holder.btnAiAnalysis.setVisibility(View.GONE); // ברירת מחדל: מוסתר
+
+        int statusCode = (event.getStatus() != null) ? event.getStatus().getCode() : 0;
+        String statusDescription = (event.getStatus() != null) ? event.getStatus().getDescription() : "";
 
         if (statusCode == 0) {
-            // עתידי
+            // --- משחק עתידי ---
             holder.tvTime.setVisibility(View.VISIBLE);
             holder.tvTime.setText(timeFormat.format(new Date(event.getStartTimestamp() * 1000)));
+
+            // הצגת כפתור יומן
+            holder.btnCalender.setVisibility(View.VISIBLE);
+
+            // --- הוספה 4: הגדרת הלחיצה על כפתור היומן ---
+            holder.btnCalender.setOnClickListener(v -> {
+                if (calendarListener != null) {
+                    calendarListener.onCalendarClick(event);
+                }
+            });
+
         } else if (statusCode == 100) {
-            // הסתיים
+            // --- משחק שהסתיים ---
             holder.tvScore.setVisibility(View.VISIBLE);
             if (event.getHomeScore() != null && event.getAwayScore() != null) {
                 String score = event.getHomeScore().getCurrent() + " - " + event.getAwayScore().getCurrent();
@@ -114,7 +134,7 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
             holder.tvStatus.setText("FT");
             holder.tvStatus.setTextColor(Color.parseColor("#999999"));
         } else {
-            // חי
+            // --- משחק חי ---
             holder.tvScore.setVisibility(View.VISIBLE);
             if (event.getHomeScore() != null && event.getAwayScore() != null) {
                 String score = event.getHomeScore().getCurrent() + " - " + event.getAwayScore().getCurrent();
@@ -122,65 +142,46 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
             }
             holder.tvStatus.setVisibility(View.VISIBLE);
             holder.tvStatus.setText(statusDescription);
-            holder.tvStatus.setTextColor(Color.parseColor("#4CAF50"));
         }
 
-        // --- ניהול כפתור ה-AI ---
-
-        // בדיקה אם המשחק הסתיים (לפי קוד 100 או תיאור finished)
+        // --- ניהול כפתור ה-AI (ללא שינוי, רק וידוא שהוא בתוך הבלוק הנכון) ---
         boolean isFinished = (statusCode == 100) || "finished".equalsIgnoreCase(statusDescription);
 
         if (isFinished) {
             holder.btnAiAnalysis.setVisibility(View.VISIBLE);
-
-            // הגדרת הלחיצה - מעבר ל-GeminiSummaryActivity
             holder.btnAiAnalysis.setOnClickListener(v -> {
+                // ... (הקוד הקיים שלך למעבר ל-AI) ...
                 String homeName = (event.getHomeTeam() != null) ? event.getHomeTeam().getName() : "Home";
                 String awayName = (event.getAwayTeam() != null) ? event.getAwayTeam().getName() : "Away";
-
                 String scoreStr = "0-0";
                 if (event.getHomeScore() != null && event.getAwayScore() != null) {
                     scoreStr = event.getHomeScore().getCurrent() + " - " + event.getAwayScore().getCurrent();
                 }
-
                 String tourName = (event.getTournament() != null) ? event.getTournament().getName() : "Tournament";
 
-                // יצירת Intent ומעבר מסך
                 Intent intent = new Intent(context, GeminiSummaryActivity.class);
-
-                // --- התיקון החשוב: העברת ה-ID של המשחק ---
                 intent.putExtra("EVENT_ID", event.getId());
-
                 intent.putExtra("HOME_TEAM", homeName);
                 intent.putExtra("AWAY_TEAM", awayName);
                 intent.putExtra("SCORE", scoreStr);
                 intent.putExtra("TOURNAMENT", tourName);
-
                 context.startActivity(intent);
             });
-
-        } else {
-            holder.btnAiAnalysis.setVisibility(View.GONE);
         }
     }
 
-    // --- פונקציות עזר ---
+    // ... (פונקציות עזר ו-ViewHolder נשארים זהים) ...
 
     private String getSmartDate(long timestamp) {
         Calendar matchCal = Calendar.getInstance();
         matchCal.setTimeInMillis(timestamp * 1000);
-
         Calendar today = Calendar.getInstance();
         Calendar tomorrow = Calendar.getInstance();
         tomorrow.add(Calendar.DAY_OF_YEAR, 1);
 
-        if (isSameDay(matchCal, today)) {
-            return "Today";
-        } else if (isSameDay(matchCal, tomorrow)) {
-            return "Tomorrow";
-        } else {
-            return dateFormat.format(matchCal.getTime());
-        }
+        if (isSameDay(matchCal, today)) return "Today";
+        else if (isSameDay(matchCal, tomorrow)) return "Tomorrow";
+        else return dateFormat.format(matchCal.getTime());
     }
 
     private boolean isSameDay(Calendar cal1, Calendar cal2) {
@@ -201,11 +202,10 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
         return events.size();
     }
 
-    // --- ViewHolder ---
     public static class FixtureViewHolder extends RecyclerView.ViewHolder {
         ImageView imgTournamentLogo, imgHomeLogo, imgAwayLogo;
         TextView tvTournamentName, tvDate, tvHomeName, tvAwayName, tvScore, tvTime, tvStatus;
-        View btnAiAnalysis;
+        View btnAiAnalysis, btnCalender;
 
         public FixtureViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -220,6 +220,7 @@ public class FixturesAdapter extends RecyclerView.Adapter<FixturesAdapter.Fixtur
             tvTime = itemView.findViewById(R.id.text_time);
             tvStatus = itemView.findViewById(R.id.text_match_status);
             btnAiAnalysis = itemView.findViewById(R.id.btn_ai_analysis);
+            btnCalender = itemView.findViewById(R.id.btn_calender);
         }
     }
 }
